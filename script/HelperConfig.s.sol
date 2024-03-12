@@ -9,7 +9,6 @@ contract HelperConfig is Script {
     struct NetworkConfig {
         uint256 deployerKey;
         address ethUsdPriceFeedAddress;
-        address btcUsdPriceFeedAddress;
     }
 
     NetworkConfig public activeNetworkConfig;
@@ -28,8 +27,7 @@ contract HelperConfig is Script {
     function getSepoliaEthConfig() public view returns (NetworkConfig memory) {
         NetworkConfig memory sepoliaConfig = NetworkConfig({
             deployerKey: vm.envUint("SEPOLIA_PRIVATE_KEY"),
-            ethUsdPriceFeedAddress: 0x694AA1769357215DE4FAC081bf1f309aDC325306,
-            btcUsdPriceFeedAddress: 0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43
+            ethUsdPriceFeedAddress: 0x694AA1769357215DE4FAC081bf1f309aDC325306
         });
         return sepoliaConfig;
     }
@@ -40,13 +38,11 @@ contract HelperConfig is Script {
         } else {
             vm.startBroadcast();
             MockV3Aggregator mockEthPriceFeed = new MockV3Aggregator(DECIMALS, ETHER_PRICE);
-            MockV3Aggregator mockBtcPriceFeed = new MockV3Aggregator(DECIMALS, BITCOIN_PRICE);
             vm.stopBroadcast();
 
             NetworkConfig memory anvilConfig = NetworkConfig({
                 deployerKey: vm.envUint("ANVIL_PRIVATE_KEY"),
-                ethUsdPriceFeedAddress: address(mockEthPriceFeed),
-                btcUsdPriceFeedAddress: address(mockBtcPriceFeed)
+                ethUsdPriceFeedAddress: address(mockEthPriceFeed)
             });
 
             return anvilConfig;

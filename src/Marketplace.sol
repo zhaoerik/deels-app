@@ -1,38 +1,19 @@
 // SPDX-License-Identifier: MIT
 
-// Layout of Contract:
-// version
-// imports
-// interfaces, libraries, contracts
-// errors
-// Type declarations
-// State variables
-// Events
-// Modifiers
-// Functions
-
-// Layout of Functions:
-// constructor
-// receive function (if exists)
-// fallback function (if exists)
-// external
-// public
-// internal
-// private
-// view & pure functions
-
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
+import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import {DeployMarketplace} from "../script/DeployMarketplace.s.sol";
 
-pragma solidity ^0.8.24;
+pragma solidity ^0.8.18;
 
-contract Marketplace {    
+contract Marketplace {
+    error Error__UserHasNoDeel();
+
+    uint256 public constant PRECISION = 1e18;
+
     AggregatorV3Interface private s_ethUsdPriceFeed;
-    AggregatorV3Interface private s_btcUsdPriceFeed;
 
-    constructor(address ethPriceFeed, address btcPriceFeed) {
+    constructor(address ethPriceFeed) {
         s_ethUsdPriceFeed = AggregatorV3Interface(ethPriceFeed);
-        s_btcUsdPriceFeed = AggregatorV3Interface(btcPriceFeed);
     }
 
     struct DeelStruct {
@@ -57,17 +38,34 @@ contract Marketplace {
      * @param description describes what the user is selling
      * @param price the price the user is selling the item for
      */
-    function createDeel(string memory title, string memory description, uint256 price) external {
-        ItemStruct memory item = s_itemsUserIsSelling[msg.sender].push();
+    function createDeel(string memory title, string memory description, uint256 price) external returns (ItemStruct memory, DeelStruct memory) {
+        ItemStruct memory item; 
         item.title = title;
         item.description = description;
-        item.price = price;        
+        item.price = price;
+        s_itemsUserIsSelling[msg.sender].push(item);
 
-        DeelStruct memory deel = s_deelsUserPosted[msg.sender].push();
+        DeelStruct memory deel;
         deel.seller = msg.sender;
         deel.buyer = address(0);
         deel.item = item;
         deel.isSold = false;
+        s_deelsUserPosted[msg.sender].push(deel);
+
+        return (item, deel);
     }
 
+
+
+    ////////////////////////////
+    // External Functions //////
+    ////////////////////////////
+
+    function getItemsUserIsSelling(address user) external view returns (ItemStruct[] memory) {
+        return s_itemsUserIsSelling[user];
+    }
+
+    function getDeelsUserPosted(address user) external view returns (DeelStruct[] memory) {
+        return s_deelsUserPosted[user];
+    }
 }

@@ -31,13 +31,12 @@ contract DeployMarketplace is Script {
     function run() external returns (Marketplace, HelperConfig) {
         uint256 deployerKey;
         address ethUsdPriceFeedAddress;
-        address btcUsdPriceFeedAddress;
 
         HelperConfig config = new HelperConfig();
-        (deployerKey, ethUsdPriceFeedAddress, btcUsdPriceFeedAddress) = config.activeNetworkConfig();
+        (deployerKey, ethUsdPriceFeedAddress) = config.activeNetworkConfig();
 
         vm.startBroadcast();
-        Marketplace marketplace = new Marketplace(ethUsdPriceFeedAddress, btcUsdPriceFeedAddress);
+        Marketplace marketplace = new Marketplace(ethUsdPriceFeedAddress);
         vm.stopBroadcast();
 
         return (marketplace, config);    
