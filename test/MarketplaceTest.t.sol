@@ -9,7 +9,6 @@ import {HelperConfig} from "../script/HelperConfig.s.sol";
 
 contract MarketplaceTest is Test {
     Marketplace marketplace;
-    // HelperConfig config;
     address public USER = makeAddr("user");
     uint256 public constant INITIAL_ETH_BALANCE = 10 ether;
 
@@ -23,7 +22,7 @@ contract MarketplaceTest is Test {
         uint256 numberOfItemsToSell = marketplace.getItemsUserIsSelling(USER).length;
         assertEq(numberOfItemsToSell, 0);
     }
-    
+
     modifier createsDeel() {
         Marketplace.ItemStruct memory item;
         Marketplace.DeelStruct memory deel;
@@ -31,8 +30,9 @@ contract MarketplaceTest is Test {
         string memory description = "These are high quality headphones";
         uint256 price = 0.05 ether;
 
-        vm.prank(USER);
-        marketplace.createDeel(title, description, price);
+        vm.startPrank(USER);
+        (item, deel) = marketplace.createDeel(title, description, price);
+        vm.stopPrank();
 
         _;
     }
@@ -49,17 +49,11 @@ contract MarketplaceTest is Test {
     }
 
     function testDeelProperties() public createsDeel {
-        Marketplace.DeelStruct[] memory userDeels = marketplace.getDeelsUserPosted(USER);
-        
-        if (userDeels.length == 0) {
-            revert Marketplace.Error__UserHasNoDeel();
-        }
-
-        Marketplace.DeelStruct memory deel = userDeels[0];
+        Marketplace.DeelStruct memory deel = marketplace.getDeelsUserPosted(USER)[0];
 
         address expectedSeller = deel.seller;
         address actualSeller = USER;
-        
+
         address expectedBuyer = deel.buyer;
         address actualBuyer = address(0);
 
@@ -69,7 +63,7 @@ contract MarketplaceTest is Test {
         string memory actualItemDescription = "These are high quality headphones";
         uint256 expectedItemPrice = deel.item.price;
         uint256 actualItemPrice = 5 * 1e16; // 0.05 ether
-        
+
         bool expectedBool = deel.isSold;
         bool actualBool = false;
 
@@ -80,5 +74,7 @@ contract MarketplaceTest is Test {
         assertEq(expectedItemPrice, actualItemPrice);
         assertEq(expectedBool, actualBool);
     }
+
+
 
 }
