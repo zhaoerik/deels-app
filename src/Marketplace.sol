@@ -1,6 +1,26 @@
 // SPDX-License-Identifier: MIT
 
-import {AggregatorV3Interface} from "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
+// Layout of Contract:
+// version
+// imports
+// interfaces, libraries, contracts
+// errors
+// Type declarations
+// State variables
+// Events
+// Modifiers
+// Functions
+
+// Layout of Functions:
+// constructor
+// receive function (if exists)
+// fallback function (if exists)
+// external
+// public
+// internal
+// private
+// view & pure functions
+
 import {DeployMarketplace} from "../script/DeployMarketplace.s.sol";
 
 pragma solidity ^0.8.18;
@@ -17,8 +37,6 @@ contract Marketplace {
     ////////////////////////
     // State Variables    //
     ////////////////////////
-    uint256 public constant PRECISION = 1e18;
-    AggregatorV3Interface private s_ethUsdPriceFeed;
     mapping(address seller => ItemStruct[] item) s_itemsUserIsSelling; // user to items they're selling
     mapping(address seller => DeelStruct[] deel) public s_deelsUserPosted; // user to items they're selling
     mapping(address buyer => ItemStruct[] item) s_itemsUserBought; // user to items they bought
@@ -39,14 +57,14 @@ contract Marketplace {
     ///////////////
     // Events    //
     ///////////////
-    event DeelCreation(address seller, string title, string description, uint256 price);
-    event DeelEdit(address seller, string title, string description, uint256 price);
-    event DeelTransaction(address seller, address buyer, DeelStruct deel);
+    event DeelCreation(address indexed seller, string title, string description, uint256 price);
+    event DeelEdit(address indexed seller, string title, string description, uint256 price);
+    event DeelTransaction(address indexed seller, address buyer, DeelStruct deel);
 
-
-    constructor(address ethPriceFeed) {
-        s_ethUsdPriceFeed = AggregatorV3Interface(ethPriceFeed);
-    }
+    ////////////////
+    // Functions  //
+    ////////////////
+    constructor() {}
 
     /**
      * @notice user can post an item to sell in the marketplace
@@ -114,11 +132,12 @@ contract Marketplace {
             deel.item.price = _price;
         }
 
-        return deel; // necessary?
+        return deel;
     }
 
     /**
      * @notice flip isSold to true ✅
+     * @notice change deel buyer to buyer address ✅
      * @notice append to s_itemsUserBought[buyer] ✅
      * @notice error for transaction failure ✅
      * @notice emit event ✅
@@ -127,11 +146,13 @@ contract Marketplace {
      */
     function transactDeel(DeelStruct memory deel) external payable {
         address seller = deel.seller;
-        emit DeelTransaction(seller, msg.sender, deel);
 
-        deel.isSold = false;
+        deel.isSold = true;
+        deel.buyer = msg.sender;
         s_itemsUserBought[msg.sender].push(deel.item);
-        (bool success, ) = seller.call{value: deel.item.price}("");
+
+        emit DeelTransaction(seller, msg.sender, deel);
+        (bool success,) = payable(seller).call{value: deel.item.price}("");
         if (!success) {
             revert Error__TransactionFailed();
         }
@@ -140,7 +161,6 @@ contract Marketplace {
     ////////////////////////////
     // External Functions     //
     ////////////////////////////
-
     function getItemsUserIsSelling(address user) external view returns (ItemStruct[] memory) {
         return s_itemsUserIsSelling[user];
     }

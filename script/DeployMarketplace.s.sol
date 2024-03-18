@@ -25,20 +25,13 @@ pragma solidity ^0.8.24;
 
 import {Script} from "forge-std/Script.sol";
 import {Marketplace} from "../src/Marketplace.sol";
-import {HelperConfig} from "../script/HelperConfig.s.sol";
 
 contract DeployMarketplace is Script {
-    function run() external returns (Marketplace, HelperConfig) {
-        uint256 deployerKey;
-        address ethUsdPriceFeedAddress;
-
-        HelperConfig config = new HelperConfig();
-        (deployerKey, ethUsdPriceFeedAddress) = config.activeNetworkConfig();
-
+    function run() external returns (Marketplace) {
         vm.startBroadcast();
-        Marketplace marketplace = new Marketplace(ethUsdPriceFeedAddress);
+        Marketplace marketplace = new Marketplace();
         vm.stopBroadcast();
 
-        return (marketplace, config);    
+        return marketplace;    
     }
 }

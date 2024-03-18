@@ -3,9 +3,9 @@
 pragma solidity ^0.8.24;
 
 import {Test, console} from "forge-std/Test.sol";
-import {DeployMarketplace} from "../script/DeployMarketplace.s.sol";
-import {Marketplace} from "../src/Marketplace.sol";
-import {HelperConfig} from "../script/HelperConfig.s.sol";
+import {DeployMarketplace} from "../../script/DeployMarketplace.s.sol";
+import {Marketplace} from "../../src/Marketplace.sol";
+import {HelperConfig} from "../../script/HelperConfig.s.sol";
 
 contract MarketplaceTest is Test {
     Marketplace marketplace;
@@ -14,7 +14,7 @@ contract MarketplaceTest is Test {
 
     function setUp() public {
         DeployMarketplace deployer = new DeployMarketplace();
-        (marketplace,) = deployer.run();
+        marketplace = deployer.run();
         vm.deal(USER, INITIAL_ETH_BALANCE);
     }
 
