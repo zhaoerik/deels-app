@@ -5,7 +5,6 @@ pragma solidity ^0.8.24;
 import {Test, console} from "forge-std/Test.sol";
 import {DeployMarketplace} from "../../script/DeployMarketplace.s.sol";
 import {Marketplace} from "../../src/Marketplace.sol";
-import {HelperConfig} from "../../script/HelperConfig.s.sol";
 
 contract MarketplaceTest is Test {
     Marketplace marketplace;

@@ -42,6 +42,7 @@ contract Marketplace {
     mapping(address buyer => ItemStruct[] item) s_itemsUserBought; // user to items they bought
 
     struct DeelStruct {
+        uint256 id;
         address seller;
         address buyer;
         ItemStruct item;
@@ -57,7 +58,7 @@ contract Marketplace {
     ///////////////
     // Events    //
     ///////////////
-    event DeelCreation(address indexed seller, string title, string description, uint256 price);
+    event DeelCreation(uint256 indexed id, address indexed seller, string title, string description, uint256 price);
     event DeelEdit(address indexed seller, string title, string description, uint256 price);
     event DeelTransaction(address indexed seller, address buyer, DeelStruct deel);
 
@@ -88,12 +89,14 @@ contract Marketplace {
         s_itemsUserIsSelling[msg.sender].push(item);
 
         DeelStruct memory deel;
+        uint256 _id = s_deelsUserPosted[msg.sender].length;
+        deel.id = _id;
         deel.seller = msg.sender;
         deel.buyer = address(0);
         deel.item = item;
         deel.isSold = false;
 
-        emit DeelCreation(msg.sender, item.title, item.description, item.price);
+        emit DeelCreation(deel.id, msg.sender, item.title, item.description, item.price);
         s_deelsUserPosted[msg.sender].push(deel);
 
         return (item, deel); // necessary?
@@ -146,12 +149,17 @@ contract Marketplace {
      */
     function transactDeel(DeelStruct memory deel) external payable {
         address seller = deel.seller;
+        emit DeelTransaction(seller, msg.sender, deel);
+        s_deelsUserPosted[seller][deel.id] = DeelStruct({
+            id: deel.id,
+            seller: deel.seller,
+            buyer: msg.sender,
+            item: deel.item,
+            isSold: true
+        });
 
-        deel.isSold = true;
-        deel.buyer = msg.sender;
         s_itemsUserBought[msg.sender].push(deel.item);
 
-        emit DeelTransaction(seller, msg.sender, deel);
         (bool success,) = payable(seller).call{value: deel.item.price}("");
         if (!success) {
             revert Error__TransactionFailed();
@@ -161,12 +169,12 @@ contract Marketplace {
     ////////////////////////////
     // External Functions     //
     ////////////////////////////
-    function getItemsUserIsSelling(address user) external view returns (ItemStruct[] memory) {
-        return s_itemsUserIsSelling[user];
-    }
 
     function getDeelsUserPosted(address user) external view returns (DeelStruct[] memory) {
         return s_deelsUserPosted[user];
+    }
+    function getItemsUserIsSelling(address user) external view returns (ItemStruct[] memory) {
+        return s_itemsUserIsSelling[user];
     }
 
     function getItemsUserBought(address user) external view returns (ItemStruct[] memory) {
